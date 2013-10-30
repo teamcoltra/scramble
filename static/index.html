@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SCRAMBLE.IO</title>
+    <title>Scramble.io</title>
     <link rel="stylesheet" href="/css/normalize.css"></link>
     <link rel="stylesheet" href="/css/style.css"></link>
 </head>
@@ -12,7 +12,7 @@
 <!-- LOGIN -->
 <script id="login-template" type="text/x-handlebars-template">
 <div id="login">
-    <h1>SCRAMBLE</h1>
+    <h1>Scramble</h1>
 
     <div class="prompt"><label>User</label><input type="text" id="token"></input></div>
     <div class="prompt"><label>Passphrase</label><input type="password" id="pass"></input></div>
@@ -20,7 +20,23 @@
 
     <div class="strike"><hr /><span>or</span><hr /></div>
 
-    <input type="submit" id="generateButton" value="Generate Account"></input></div>
+    <input type="submit" id="generateButton" value="Generate Account"></input>
+
+    <div class="footer">
+        <p>
+            <strong>Scramble.io now has easy-to-remember email addresses!</strong><br/>
+            Also, you can now send unencrypted mail to outside addresses.<br/>
+            As always, all mail between Scramble email addresses is encrypted and signed.<br/>
+            <a href="/doc/">How it works</a>
+        </p>
+        <p>
+            Questions? Feedback? Just testing a new account?<br/>
+            Send me a note! <a href="mailto:dcposch@scramble.io">dcposch@scramble.io</a>
+        </p>
+    </div>
+
+    <a href="https://github.com/dcposch/scramble"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+
 </div>
 </script>
 
@@ -61,97 +77,181 @@
 <div id="content"></div>
 
 <div id="sidebar">
-    <h1>SCRAMBLE</h1>
+    <h1>Scramble</h1>
+    <div class="warning" id="warningBar"></div>
     <div class="welcome">Welcome, {{token}}. <a href="/" id="link-logout">Log Out</a></div>
-    <div class="email">{{pubHash}}@{{domain}}</div>
+    <div class="address">{{emailAddress}}</div>
+    <div class="pubHash">#{{pubHash}}</div>
     <a id="tab-compose" href="#" class="tab">Compose</a>
     <a id="tab-inbox" href="#" class="tab">Inbox</a>
-    <ul id="inbox" class="box"></ul>
+    <div id="inbox" class="box"></div>
     <a id="tab-sent" href="#" class="tab">Sent</a>
-    <ul id="sent" class="box"></ul>
+    <div id="sent" class="box"></div>
     <a id="tab-archive" href="#" class="tab">Archive</a>
-    <ul id="archive" class="box"></ul>
+    <div id="archive" class="box"></div>
     <a id="tab-contacts" href="#" class="tab">Contacts</a>
     <a href="#" id="link-kb-shortcuts" class="hint">Keyboard shortcuts available</a>
 </div>
 </script>
 
 
-<!-- INBOX -->
-<script id="inbox-template" type="text/x-handlebars-template">
-{{#each emailHeaders}}
-    <li data-id="{{MessageID}}" data-box="{{Box}}" data-time="{{UnixTime}}" data-from="{{From}}" data-to="{{To}}">{{Subject}}</li>
-{{/each}}
+<!-- BOX -->
+<script id="box-template" type="text/x-handlebars-template">
+{{> box-pagination}}
+<ul class="box-items">
+    {{#each emailHeaders}}
+        {{!-- data-msg-id becomes .data("msgID") --}}
+        <li class="box-item"
+            data-msg-id="{{MessageID}}"
+            data-thread-id="{{ThreadID}}"
+            data-box="{{../box}}"
+            data-time="{{UnixTime}}"
+            data-from="{{From}}"
+            data-to="{{To}}">{{Subject}}</li>
+    {{/each}}
+</ul>
+{{> box-pagination}}
+</script>
+
+<script id="box-pagination-partial" type="text/x-handlebars-template">
+<div class="box-pagination">
+{{#ifCond totalPages '>' 1}}
+    {{#ifCond 1 '<' page}}
+        <a href="#" data-page="0">&#171;</a>
+    {{/ifCond}}
+    {{#each pages}}
+        {{#ifCond ../page '==' page}}
+            <span class="page-link page-current">{{page}}</span>
+        {{else}}
+            <a class="page-link" href="#" data-page="{{page}}" data-box="{{../../box}}">{{page}}</a>
+        {{/ifCond}}
+    {{/each}}
+    {{#ifCond page '<' totalPages}}
+        <a href="#" data-page="{{totalPages}}">&#187;</a>
+    {{/ifCond}}
+{{/ifCond}}
+</div>
+</script>
+
+
+
+<!-- THREAD (MANY EMAILS) -->
+<script id="thread-template" type="text/x-handlebars-template">
+<div id="thread" data-thread-id="{{threadID}}">
+    <div id="thread-subject">
+        <h2>{{subject}}</h2>
+        <div class="threadControl controlButtons">
+            <button class="replyButton">Reply</button>
+            <button class="replyAllButton">Reply All</button>
+            <button class="forwardButton">Forward</button>
+            {{#ifCond box '==' "inbox"}}
+            <button class="archiveButton">Archive</button>
+            {{/ifCond}}
+            {{#ifCond box '==' "archive"}}
+            <button class="moveToInboxButton">Move to Inbox</button>
+            {{/ifCond}}
+            <button class="deleteButton">Delete</button>
+        </div>
+    </div>
+    <div id="thread-emails">
+    </div>
+</div>
 </script>
 
 
 <!-- SINGLE EMAIL -->
 <script id="email-template" type="text/x-handlebars-template">
-<h2 class="subject">{{subject}}</h1>
-<div><label>From</label><span class="from">
-    {{#if fromName}}{{from}} - {{fromName}}
-    {{else}}{{from}} - <a href="#" id="enterFromNameButton">add contact</a>
-    {{/if}}
-    </span></div>
-<div><label>To</label> <span class="to">
-    {{#each toAddresses}}<div>{{address}}{{#if name}} - {{name}}{{/if}}</div>{{/each}}
-    </span></div>
-<div><label>Received</label> <span class="received">{{formatDate time format="MMM D YYYY, hh:mm"}}</span></div>
-<div class="replyForwardButtons">
-    <button id="replyButton">Reply</button>
-    <button id="replyAllButton">Reply All</button>
-    <button id="forwardButton">Forward</button>
-    {{#if isInbox}}
-    <button id="archiveButton">Archive</button>
-    {{/if}}
-    {{#if isArchive}}
-    <button id="moveToInboxButton">Move to Inbox</button>
-    {{/if}}
+{{!--
+    This parent level div class "email" is functionally important.
+    For example, the buttons (ie replyButton, forwardButton) work
+     by finding the context email data by .closest(".email").data("email").
+--}}
+<div class="email" data-msg-id="{{msgID}}">
+    <div class="received">{{formatDate time format="MMM D YYYY, hh:mm"}}</div>
+    <div class="from">
+    {{> email-address-partial fromAddress}}
+    </div>
+    <div class="to">to 
+        {{#each toAddresses}}
+            {{> email-address-partial}}
+        {{/each}}
+    </div>
+    {{!--
+    <div class="emailControl controlButtons">
+        <button class="replyButton">Reply</button>
+        <button class="replyAllButton">Reply All</button>
+        <button class="forwardButton">Forward</button>
+        {{#ifCond box '==' "inbox"}}
+        <button class="archiveButton">Archive</button>
+        {{/ifCond}}
+        {{#ifCond box '==' "archive"}}
+        <button class="moveToInboxButton">Move to Inbox</button>
+        {{/ifCond}}
+        <button class="deleteButton">Delete</button>
+    </div>
+    --}}
+    <div class="body">{{{htmlBody}}}</div>
+
+    {{!-- This is where the compose box goes when replying/forwarding this email --}}
+    <div class="email-compose">
+    </div>
 </div>
-<pre class="body">{{body}}</pre>
 </script>
 
+<script id="email-address-partial" type="text/x-handlebars-template">
+    {{#if name}}
+        <span class="addr-name">{{name}}
+            <span class="addr">&lt;{{address}}&gt;</span>
+        </span>
+    {{else}}
+        <span class="addr"><a href="#" data-addr="{{address}}" class="enterAddContactButton">{{address}}</a></span>
+    {{/if}}
+</script>
 
 
 <!-- COMPOSE -->
 <script id="compose-template" type="text/x-handlebars-template">
-<div class="prompt"><label for="subject">Subject</label><input type="text" id="subject" value="{{subject}}"></span></div>
-<div class="prompt"><label for="to">To</label><input type="text" id="to" value="{{to}}"></span></div>
-<div><label>&nbsp;</label><span class="hint">Email addresses and contact names are both OK, eg "bob, joe, mgnvdy6mrhwmdfys@scramble.io"</span></div>
-<textarea id="body">
-{{#if body}}
-{{body}}
-{{else}}
---
-Encrypted with https://scramble.io
-{{/if}}
-</textarea>
-<input type="submit" id="sendButton" value="Send"></input>
+<div class="compose {{#if inline}}inline{{/if}}">
+    <input type="hidden" name="ancestorIDs" value="{{ancestorIDs}}"/>
+    <input type="hidden" name="threadID" value="{{threadID}}"/>
+    {{#if inline}}
+    <input type="hidden" name="subject" value="{{subject}}"/>
+    {{else}}
+    <div class="prompt"><label for="subject">Subject</label><input type="text" name="subject" value="{{subject}}"></span></div>
+    {{/if}}
+    <div class="prompt"><label for="to">To</label><input type="text" name="to" value="{{to}}"></span></div>
+    <div><label>&nbsp;</label><span class="hint">Email addresses and contact names are both OK, eg "bob, joe, mgnvdy6mrhwmdfys@scramble.io"</span></div>
+    <textarea name="body">{{body}}</textarea>
+    <input type="submit" class="sendButton" value="Send"></input>
+</div>
 </script>
 
 
 
 <!-- CONTACTS -->
 <script id="contacts-template" type="text/x-handlebars-template">
-<h2>Contacts</h2>
-<ul>
-    {{#each this}}
-    <li>
-    <input type="text" class="name" placeholder="(name)" value="{{name}}" />
-    <input type="text" class="address" placeholder="(address)" value="{{address}}" />
-    <a href="#" class="deleteButton">Delete</a>
-    </li>
-    {{/each}}
-</ul>
-<button id="addContactButton">Add Contact</button>
-<button id="saveContactsButton">Save</button>
+<div class="contacts">
+    <h2>Contacts</h2>
+    <ul>
+        {{#each this}}
+        <li>
+        <input type="text" class="name" placeholder="(name)" value="{{name}}" />
+        <input type="text" class="address" placeholder="(address)" value="{{address}}" />
+        <input type="text" class="pubHash" placeholder="(key hash)" value="{{pubHash}}" disabled="true" />
+        <a href="#" class="deleteButton">[X]</a>
+        </li>
+        {{/each}}
+    </ul>
+    <button class="addContactButton">Add Contact</button>
+    <button class="saveContactsButton">Save</button>
+</div>
 </script>
 
 <script id="new-contact-template" type="text/x-handlebars-template">
 <li class="new">
 <input type="text" class="name" placeholder="(name)"/>
 <input type="text" class="address" placeholder="(email address)"/>
-<a href="#" class="deleteButton">Delete</a>
+<a href="#" class="deleteButton">[X]</a>
 </li>
 </script>
 
@@ -184,9 +284,14 @@ Encrypted with https://scramble.io
 
 <script type="text/javascript" src="/js/jquery.min.js"></script>
 <script type="text/javascript" src="/js/jquery.cookie.js"></script>
+<script type="text/javascript" src="/js/sugar.min.js"></script>
 <script type="text/javascript" src="/js/moment.min.js"></script>
 <script type="text/javascript" src="/js/handlebars.js"></script>
 <script type="text/javascript" src="/js/openpgp.js"></script>
+<script type="text/javascript" src="/js/scrypt.js"></script>
 <script type="text/javascript" src="/js/app.js"></script>
+<script type="text/javascript">
+    $(main)
+</script>
 </body>
 </html>
