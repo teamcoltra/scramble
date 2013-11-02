@@ -6,13 +6,12 @@
     <link rel="stylesheet" href="/css/style.css"></link>
 </head>
 <body>
-<div id="wrapper"></div>
-
+<div class="pure-g-r content" id="layout">
 
 <!-- LOGIN -->
 <script id="login-template" type="text/x-handlebars-template">
 <div id="login">
-    <h1>Scramble</h1>
+    <h1>451.im</h1>
 
     <div class="prompt"><label>User</label><input type="text" id="token"></input></div>
     <div class="prompt"><label>Passphrase</label><input type="password" id="pass"></input></div>
@@ -24,18 +23,16 @@
 
     <div class="footer">
         <p>
-            <strong>Scramble.io now has easy-to-remember email addresses!</strong><br/>
+            <strong>451.im</strong><br/>
             Also, you can now send unencrypted mail to outside addresses.<br/>
             As always, all mail between Scramble email addresses is encrypted and signed.<br/>
             <a href="/doc/">How it works</a>
         </p>
         <p>
             Questions? Feedback? Just testing a new account?<br/>
-            <a href="mailto:hello@scramble.io">Send us a note!</a>
+            <a href="mailto:hey@451.im">Send us a note!</a>
         </p>
     </div>
-
-    <a href="https://github.com/dcposch/scramble"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
 
 </div>
 </script>
@@ -74,25 +71,39 @@
 <!-- PAGE STRUCTURE -->
 <script id="page-template" type="text/x-handlebars-template">
 <div id="statusBar"></div>
+
+<div class="pure-g-r content" id="sidebar layout">
+    <div class="pure-u" id="nav">
+        <a href="#" class="nav-menu-button">Menu</a>
+
+        <div class="nav-inner">
+        <div class="warning" id="warningBar"></div>
+            <a id="tab-compose" href="#" class="pure-button primary-button">Compose</a>
+
+            <div class="pure-menu pure-menu-open">
+                <ul>
+                     <li class="pure-menu-heading welcome">Welcome, {{token}}!</li>
+                    <li><a id="tab-inbox" href="#" class="tab">Inbox <span class="email-count">(2)</span></a></li>
+                    <li><a id="tab-sent" href="#" class="tab">Sent</a></li>
+                    <li><a id="tab-archive" href="#" class="tab">Archives</a></li>
+                    <li><a id="tab-contacts" href="#" class="tab">Contacts</a></li>
+                    <li class="pure-menu-heading">Labels (coming soon!)</li>
+                    <li><a href="#"><span class="email-label-personal"></span>Personal</a></li>
+                    <li><a href="#"><span class="email-label-work"></span>Work</a></li>
+                    <li><a href="#"><span class="email-label-travel"></span>Travel</a></li>
+                    <li><a href="#" id="link-kb-shortcuts" class="hint">Keyboard Shortcuts</a></li>
+                </ul>
+            </div>
+             <div class="address">{{emailAddress}}</div>
+            <div class="pubHash">#{{pubHash}}</div>
+            <a href="/" id="link-logout" class="pure-button secondary-button">Log Out</a>
+        </div>
+    </div>
+</script>
+
+
 <div id="content"></div>
 
-<div id="sidebar">
-    <h1>Scramble</h1>
-    <div class="warning" id="warningBar"></div>
-    <div class="welcome">Welcome, {{token}}. <a href="/" id="link-logout">Log Out</a></div>
-    <div class="address">{{emailAddress}}</div>
-    <div class="pubHash">#{{pubHash}}</div>
-    <a id="tab-compose" href="#" class="tab">Compose</a>
-    <a id="tab-inbox" href="#" class="tab">Inbox</a>
-    <div id="inbox" class="box"></div>
-    <a id="tab-sent" href="#" class="tab">Sent</a>
-    <div id="sent" class="box"></div>
-    <a id="tab-archive" href="#" class="tab">Archive</a>
-    <div id="archive" class="box"></div>
-    <a id="tab-contacts" href="#" class="tab">Contacts</a>
-    <a href="#" id="link-kb-shortcuts" class="hint">Keyboard shortcuts available</a>
-</div>
-</script>
 
 
 <!-- BOX -->
